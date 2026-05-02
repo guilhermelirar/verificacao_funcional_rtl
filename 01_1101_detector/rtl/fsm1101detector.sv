@@ -6,7 +6,7 @@ module fsm1101detector (
   output reg detected
   );
 
-  parameter INIT = 4'b0000,
+  parameter INIT = 4'b000,
     S1 = 4'b001,
     S2 = 4'b101,
     S3 = 4'b100,
