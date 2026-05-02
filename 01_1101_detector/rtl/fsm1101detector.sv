@@ -12,7 +12,7 @@ module fsm1101detector (
     S3 = 4'b100,
     S4 = 4'b110;
 
-  reg [2:0] state = 4'b0000;
+  reg [2:0] state;
   reg [2:0] next_state;
 
   always_comb begin 
