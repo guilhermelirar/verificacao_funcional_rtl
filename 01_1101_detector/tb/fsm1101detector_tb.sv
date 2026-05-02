@@ -25,8 +25,9 @@ initial begin
   clk = 1;
   $dumpfile("wave.vcd");
   $dumpvars(0, testbench);
+  $fsdbDumpvars(0, testbench);
  
-  test_sequence = 8'b1101_101x;
+  test_sequence = 8'b1101_1010;
   rst = 0; allow_overlap = 0;
   w = 0;
   for (int i = 7; i >= 0; i--) begin
