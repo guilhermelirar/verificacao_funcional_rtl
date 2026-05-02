@@ -18,8 +18,38 @@ fsm1101detector dut (
   .detected(detected)
   );
 
+reg [6:0] last_seven;
 
-reg [7:0] test_sequence;
+always @(posedge clk) begin
+  if (rst) last_seven = 7'b0000000;
+  else begin 
+    last_seven <= {last_seven[5:0], w};
+  end 
+end
+
+parameter pattern = 4'b1101;
+
+always @(negedge clk) begin
+  if (detected) begin
+    if (rst) $error("ERRO: detected em modo reset");
+
+    if (last_seven[3:0] != pattern) 
+      $error("ERRO: detectado enquanto ultimos 4 foram: %b", last_seven[3:0]);
+ 
+    if (!allow_overlap && last_seven[6:3] == pattern && last_seven[3:0] == pattern)
+      $error("ERRO: allow_overlap(0) não obedecido");
+
+  end else if (rst) begin
+
+    if (allow_overlap && last_seven[3:0] == pattern) 
+      $error("ERRO: detected não subiu quando deveria");
+
+    if (!allow_overlap && last_seven[3:0] == pattern && last_seven[6:3]) 
+      $error("ERRO: detected não subiu quando deveria");
+
+  end
+
+end
 
 initial begin
   clk = 1;
@@ -27,21 +57,14 @@ initial begin
   $dumpvars(0, testbench);
   $fsdbDumpvars(0, testbench);
  
-  test_sequence = 8'b1101_1010;
-  rst = 0; allow_overlap = 0;
-  w = 0;
-  for (int i = 7; i >= 0; i--) begin
-    @(posedge clk);
-    w <= test_sequence[i];
-  end
+  rst = 1; allow_overlap = 0;
+  repeat (1000) w = $random;
 
-  #5 allow_overlap = 1;
-  for (int i = 7; i >= 0; i--) begin
-    @(posedge clk);
-    w <= test_sequence[i];
-  end
+  rst = 0;
+  repeat (1000) w = $random;
 
-
+  allow_overlap = 1;
+  repeat (1000) w = $random;
 
   #20 $finish;
 end
