@@ -6,31 +6,32 @@ module fsm1101detector (
   output reg detected
   );
 
-  parameter INIT = 4'b000,
-    S1 = 4'b001,
-    S2 = 4'b101,
-    S3 = 4'b100,
-    S4 = 4'b110;
+  parameter init = 4'b000,
+    s1 = 4'b001,
+    s2 = 4'b101,
+    s3 = 4'b100,
+    s4 = 4'b110;
 
   reg [2:0] state;
   reg [2:0] next_state;
 
   always_comb begin 
     case (state)
-      INIT: next_state = w ? S1 : INIT;
-      S1: next_state = w ? S2 : INIT;
-      S2: next_state = w ? S2 : S3;
-      S3: next_state = w ? S4 : INIT;
-      S4: 
-        if (w) next_state = allow_overlap ? S2 : S1;
-        else next_state = INIT;
-      default: next_state = INIT;
+      init: next_state = w ? s1 : init;
+      s1: next_state = w ? s2 : init;
+      s2: next_state = w ? s2 : s3;
+      s3: next_state = w ? s4 : init;
+      s4: 
+        if (w) next_state = allow_overlap ? s2 : s1;
+        else next_state = init;
+      default: next_state = init;
     endcase
   end
 
   always_ff @(posedge clk) begin
-    state <= rst ? INIT : next_state;
+    if (rst) detected <= 0;
+    else detected <= (next_state == s4);
+    state <= rst ? init : next_state;
   end
 
-  assign detected = (state == S4);
 endmodule
