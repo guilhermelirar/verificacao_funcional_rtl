@@ -18,12 +18,12 @@ fsm1101detector dut (
   .detected(detected)
   );
 
-reg [6:0] last_seven;
+reg [3:0] last_four;
 
 always @(posedge clk) begin
-  if (rst) last_seven = 7'b0000000;
+  if (rst) last_four = 4'b0000;
   else begin 
-    last_seven <= {last_seven[5:0], w};
+    last_four <= {last_four[2:0], w};
   end 
 end
 
@@ -34,17 +34,16 @@ assert property (@(posedge clk) detected |-> !rst)
 else $error("(ERRO) detect em reset");
 
 assert property (
-  @(posedge clk) detected |-> last_seven[3:0] == pattern
+  @(posedge clk) detected |-> last_four == pattern
 )
 else $error("(ERROR) falso positivo");
 
-assert property (@(posedge clk) disable iff (rst) 
-  (allow_overlap 
-  or last_seven[6:3] != pattern) 
-  and last_seven[3:0] == pattern 
+assert property (@(posedge clk) disable iff (rst)
+  (allow_overlap or $past(detected, 4)) and 
+  last_four == pattern 
   |-> detected
 ) else $error("(ERRO) sequencia válida %b mas detected foi 0 (allow_overlap=%b)", 
-      last_seven, allow_overlap);
+      last_four, allow_overlap);
 
 assert property (@(posedge clk) !allow_overlap and detected 
   |=> !detected[*3]
