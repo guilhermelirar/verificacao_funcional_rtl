@@ -29,44 +29,51 @@ end
 
 parameter pattern = 4'b1101;
 
-always @(negedge clk) begin
-  if (detected) begin
-    if (rst) $error("ERRO: detected em modo reset");
+// PROPERTIES & ASSERTIONS
+assert property (@(posedge clk) detected |-> !rst)
+else $error("(ERRO) detect em reset");
 
-    if (last_seven[3:0] != pattern) 
-      $error("ERRO: detectado enquanto ultimos 4 foram: %b", last_seven[3:0]);
- 
-    if (!allow_overlap && last_seven[6:3] == pattern && last_seven[3:0] == pattern)
-      $error("ERRO: allow_overlap(0) não obedecido");
+assert property (
+  @(posedge clk) detected |-> last_seven[3:0] == pattern
+)
+else $error("(ERROR) falso positivo");
 
-  end else if (rst) begin
+assert property (@(posedge clk) disable iff (rst) 
+  (allow_overlap 
+  or last_seven[6:3] != pattern) 
+  and last_seven[3:0] == pattern 
+  |-> detected
+) else $error("(ERRO) sequencia válida %b mas detected foi 0 (allow_overlap=%b)", 
+      last_seven, allow_overlap);
 
-    if (allow_overlap && last_seven[3:0] == pattern) 
-      $error("ERRO: detected não subiu quando deveria");
+assert property (@(posedge clk) !allow_overlap and detected 
+  |=> !detected[*3]
+) else $error("(ERRO) allow_overlap 0 foi violado");
 
-    if (!allow_overlap && last_seven[3:0] == pattern && last_seven[6:3]) 
-      $error("ERRO: detected não subiu quando deveria");
-
-  end
-
-end
 
 initial begin
   clk = 1;
-  $dumpfile("wave.vcd");
+  rst = 1; allow_overlap = 0; w = 0;
+  
+  repeat (5) @(negedge clk); 
+  
+  $dumpfile("fsm1101.vcd");
   $dumpvars(0, testbench);
-  $fsdbDumpvars(0, testbench);
- 
-  rst = 1; allow_overlap = 0;
-  repeat (1000) w = $random;
-
+  
   rst = 0;
-  repeat (1000) w = $random;
+  $display("--- Iniciando Teste: allow_overlap: 0 ---");
+  repeat (1000) begin
+    @(negedge clk); 
+    w = $random;
+  end
 
   allow_overlap = 1;
-  repeat (1000) w = $random;
+  $display("--- Iniciando Teste: allow_overlap: 1 ---");
+  repeat (1000) begin
+    @(negedge clk);
+    w = $random;
+  end
 
   #20 $finish;
 end
 endmodule
-
