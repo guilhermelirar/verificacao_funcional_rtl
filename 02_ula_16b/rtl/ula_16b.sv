@@ -70,6 +70,9 @@ module ula_16b(
     else if (alu_op == op_dec)
       overflow = (sign_a == 1 && sign_out == 0);
 
+    else 
+      overflow = 0;
+
     flags = {zero, negative, carry, overflow};
   end
 
