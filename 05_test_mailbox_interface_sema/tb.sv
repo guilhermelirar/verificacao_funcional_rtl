@@ -23,16 +23,35 @@ class generator;
   endtask
 endclass
 
+class driver;
+  mailbox mbx;
+
+  function new (mailbox mbx);
+    this.mbx = mbx;
+  endfunction
+
+  task drive_data();
+    transaction t = new ();
+    $display("[%0t] [Driver] attempting to get a transaction from mailbox",
+      $time);
+    mbx.get(t);
+    $display("[%0t] [Driver] just got a transaction:", $time);
+    t.display();
+  endtask
+endclass
+
 module tb_top;
   mailbox mbx;
   generator gen;
+  driver drv;
 
   initial begin
     mbx = new();
     gen = new(mbx);
+    drv = new(mbx);
 
     #10 gen.gen_data();
-    #10;
+    #10 drv.drive_data();
     $finish;
   end
 endmodule
