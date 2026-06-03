@@ -1,4 +1,5 @@
 //** testbench do adder de 4 bit
+`timescale 1 ns/1 ns
 module adderNbit_tb;
   localparam BITS = 8;
 
@@ -24,11 +25,18 @@ module adderNbit_tb;
     #10;
     t_b = 8'hFF; t_a = 1;
 
+    #10;
+
+
+    $finish;
   end 
 
   initial begin
     $monitor("A: %d | B: %d | R: %d | C: %d ", t_a, t_b, 
       t_result, t_carry);
+    $dumpfile("adderNbit_tb.vcd");
+    $dumpvars(0, dut);
+    $fsdbDumpvars;
   end
 
 endmodule

@@ -1,31 +1,20 @@
-MAKEFLAGS += --no-print-directory
+FILES = files.f
+SRC_CODE = tb/adderNbit_tb.sv rtl/adderNbit.sv 
+TOP ?= adderNbit_tb
 
-# make run TOP=<name> caso seja outro nome
-TOP ?= testbench
-
-VLOG := $(wildcard rtl/*.sv  tb/*.sv )
-VHDL := $(wildcard rtl/*.vhd tb/*.vhd)
-
-OK   := $(patsubst %, build/%.ok, $(VLOG) $(VHDL) )
-
-run: build/simv
-	cd build && ./simv -quiet -no_save
-
-build:
+build/vlogan.log: $(SRC_CODE)
 	mkdir -p build
-	mkdir -p build/rtl
-	mkdir -p build/tb
+	cd build && vlogan -kdb -sverilog $(patsubst %,../%,$(SRC_CODE)) -l vlogan.log -q
+	
+build/vcs.log: build/vlogan.log
+	cd build && vcs -kdb -debug_access \
+	-Mdir=csrc -o simv $(TOP) -l vcs.log -q 
 
-build/simv: $(OK) build
-	cd build && vcs -full64 -quiet -debug_acc+all $(TOP)
+analyze: build/vlogan.log
 
-build/%.sv.ok: %.sv | build
-	cd build && vlogan -full64 -q -sverilog ../$<
-	@touch $@
-        
-build/%.vhd.ok: %.vhd | build
-	cd build && vhdlan -full64 -q ../$<
-	@touch $@
+elaborate: build/vcs.log
+
+all: analyze elaborate
 
 clean:
 	rm -rf build
