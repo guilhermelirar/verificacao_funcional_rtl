@@ -50,8 +50,23 @@ module tb_top;
     gen = new(mbx);
     drv = new(mbx);
 
-    #10 gen.gen_data();
-    #10 drv.drive_data();
-    $finish;
+    $display("[%0t] [Main] fork join will start", $time);
+    fork
+      #10 gen.gen_data();
+      drv.drive_data();
+    join
+    $display("[%0t] [Main] fork join finished (it blocked main thread)", 
+      $time);
+
+    $display("[%0t] [Main] fork join_none will start", $time);
+    
+    fork
+      #10 gen.gen_data();
+      drv.drive_data();
+    join_none
+
+    $display("[%0t] [Main] fork join_none won't block", $time);
+
+    #50 $finish;
   end
 endmodule
