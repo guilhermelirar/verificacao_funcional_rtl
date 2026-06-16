@@ -7,9 +7,20 @@ test1. Create a class called MemTrans that contains the following members,
   value of data_in and address
 */
 
+typedef logic [7:0] byte_t;
+typedef logic [3:0] addr_t;
+
 class MemTrans;
-  logic [7:0] data_in;
-  logic [3:0] address;
+  byte_t data_in;
+  addr_t address;
+
+  // test2 - custon contructor
+  function new (addr_t addr = 0, byte_t data = 0);
+  begin 
+    this.data_in = data;
+    this.address = addr;
+  end
+  endfunction
 
   function print();
     $display("[MemTrans] data_in: %h, address: %h", data_in, address);
@@ -18,7 +29,9 @@ endclass
 
 module test1;
   initial begin
-    MemTrans memtr = new();
-    memtr.print();
+    MemTrans memtr1 = new(.addr(2));
+    MemTrans memtr2 = new(3, 4);
+    memtr1.print();
+    memtr2.print();
   end 
 endmodule
