@@ -7,7 +7,7 @@ interface ffd_if (input logic clk);
 
   clocking cb @(posedge clk);
     // o quao antes sample inputs, e quão depois drive output
-    #default input #1step output #0; // padrão de skew
+    default input #1step output #0; 
     output d;
     output rst_n;
     input q;

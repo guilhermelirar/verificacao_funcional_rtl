@@ -1,56 +1,45 @@
 `timescale 1ns/1ns
 
 module testbench;
-
   logic clk;
-  logic d;
-  logic rst_n;
-  logic q;
 
-  // DUT
-  ffd dut (
-    .clk   (clk),
-    .d     (d),
-    .rst_n (rst_n),
-    .q     (q)
-  );
+  ffd_if top_if (clk);
 
-  // Clock manual (controlado)
-  initial clk = 0;
+  ffd dut (top_if);
 
   initial begin
-    $display(" time | clk d rst_n | q");
-    $monitor("%4t |  %0b   %0b   %0b   | %0b",
-              $time, clk, d, rst_n, q);
+    clk = 0;
+    forever #5 clk = ~clk; 
   end
 
-assert property (
-  @(posedge clk) disable iff (!rst_n)
-  1 |=> (q == $past(d))
-);
-
   initial begin
-    // init
-    rst_n = 0;
-    d     = 0;
-    #2;
+    @top_if.cb;
+    top_if.cb.rst_n <= 0;
+    top_if.cb.d     <= 0;
 
-    rst_n = 1;
-    #2;
+    @top_if.cb;
+    $display("d = %b; q = %b", top_if.d, top_if.cb.q);
+    top_if.cb.rst_n <= 1; // Desativa reset
+    
+    @top_if.cb;
+    $display("d = %b; q = %b", top_if.d, top_if.cb.q);
+    top_if.cb.d <= 1; 
 
-    clk = 0;
-    d   = 1;
-    #5;
+    @top_if.cb;
+    $display("d = %b; q = %b", top_if.d, top_if.cb.q);
+    top_if.cb.d <= 0;
 
-    clk = 1;
-    #5;
+    @top_if.cb;
+    $display("d = %b; q = %b", top_if.d, top_if.cb.q);
+    top_if.cb.d <= 1;
 
-    clk = 0;
-    d   = 0;
-    #5;
+    @top_if.cb;
+    $display("d = %b; q = %b", top_if.d, top_if.cb.q);
+    top_if.cb.rst_n <= 0;
 
-    clk = 1;
-    #5;
+    @top_if.cb;
+    $display("rst_n: %b; d = %b |-> q = %b", top_if.rst_n, 
+      top_if.d, top_if.cb.q);
 
     $finish;
   end
